@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [atomdb.store :as store]
             [atomdb.store.file :refer [file-store]]
-            [atomdb.store.test-suite :as suite]))
+            [atomdb.store.test-suite :as store.suite]))
 
 (deftest file-store-roundtrip
   (testing "stores and retrieves data correctly"
@@ -18,7 +18,7 @@
       (is (nil? (store/get-chunk fs "deadbeefdeadbeefdeadbeefdeadbeef"))))))
 
 (deftest store-roundtrip-supported-types
-  (suite/store-roundtrip-supported-types (file-store "/tmp/atomdb-file-test")))
+  (store.suite/store-roundtrip-supported-types (file-store "/tmp/atomdb-file-test")))
 
 (deftest store-edge-case-behavior
-  (suite/store-edge-case-behavior (file-store "/tmp/atomdb-file-test")))
+  (store.suite/store-edge-case-behavior (file-store "/tmp/atomdb-file-test")))

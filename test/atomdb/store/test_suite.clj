@@ -1,8 +1,7 @@
 (ns atomdb.store.test-suite
   (:require [atomdb.store :as store]
             [clojure.test :refer :all])
-  (:import (java.time Instant)
-           (java.util UUID)))
+  (:import (java.util Date UUID)))
 
 (defn store-roundtrip-supported-types [store]
   (testing "persist/load-node roundtrip for core data types"
@@ -14,7 +13,7 @@
                'symbol
                "string"
                (UUID/randomUUID)
-               (Instant/now)
+               (Date.)
                (bigdec "42.42")
                22/7
                true
@@ -36,7 +35,7 @@
 
   (testing "persists nested structure with mixed types"
     (let [val {:a [1 #{:b (UUID/randomUUID)}]
-               :c (Instant/now)
+               :c (Date.)
                :d {:inner (bigdec "99.99")}}
           h (store/persist store val)
           result (store/load-node store (store/get-chunk store h))]

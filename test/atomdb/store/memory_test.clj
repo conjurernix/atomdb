@@ -1,5 +1,5 @@
 (ns atomdb.store.memory-test
-  (:require [atomdb.store.test-suite :as suite]
+  (:require [atomdb.store.test-suite :as store.suite]
             [clojure.test :refer :all]
             [atomdb.store :as store]
             [atomdb.store.memory :refer [->MemoryChunkStore]]))
@@ -21,7 +21,7 @@
       (is (nil? (store/get-chunk ms "notarealhash"))))))
 
 (deftest store-roundtrip-supported-types
-  (suite/store-roundtrip-supported-types (memory-store)))
+  (store.suite/store-roundtrip-supported-types (memory-store)))
 
 (deftest store-edge-case-behavior
-  (suite/store-edge-case-behavior (memory-store)))
+  (store.suite/store-edge-case-behavior (memory-store)))

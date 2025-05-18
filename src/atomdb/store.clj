@@ -1,7 +1,8 @@
 (ns atomdb.store
   (:import (clojure.lang IPersistentList IPersistentMap IPersistentSet IPersistentVector Keyword Ratio Symbol)
-           (java.time Instant)
-           (java.util UUID)))
+           (java.time ZonedDateTime)
+           (java.time.format DateTimeFormatter)
+           (java.util Date UUID)))
 
 (defprotocol ChunkStore
   (put-chunk! [store data])
@@ -45,8 +46,8 @@
 (defmethod persist UUID [store u]
   (put-chunk! store {:type :uuid :value (str u)}))
 
-(defmethod persist Instant [store inst]
-  (put-chunk! store {:type :instant :value (.toString inst)}))
+(defmethod persist Date [store date]
+  (put-chunk! store {:type :date :value (.format DateTimeFormatter/ISO_INSTANT (.toInstant date))}))
 
 (defmethod persist BigDecimal [store v]
   (put-chunk! store {:type :bigdec :value (str v)}))
@@ -90,8 +91,8 @@
 (defmethod load-node :uuid [_ {:keys [value]}]
   (UUID/fromString value))
 
-(defmethod load-node :instant [_ {:keys [value]}]
-  (Instant/parse value))
+(defmethod load-node :date [_ {:keys [value]}]
+  (Date/from (.toInstant (ZonedDateTime/parse value))))
 
 (defmethod load-node :bigdec [_ {:keys [value]}]
   (bigdec value))
