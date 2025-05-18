@@ -1,4 +1,4 @@
-(ns atomdb.store-test-suites
+(ns atomdb.store.test-suite
   (:require [atomdb.store :as store]
             [clojure.test :refer :all])
   (:import (java.time Instant)

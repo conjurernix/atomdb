@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [atomdb.store :as store]
             [atomdb.store.file :refer [file-store]]
-            [atomdb.store-test-suites :as suite]))
+            [atomdb.store.test-suite :as suite]))
 
 (deftest file-store-roundtrip
   (testing "stores and retrieves data correctly"

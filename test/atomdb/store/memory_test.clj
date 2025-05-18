@@ -1,5 +1,5 @@
 (ns atomdb.store.memory-test
-  (:require [atomdb.store-test-suites :as suite]
+  (:require [atomdb.store.test-suite :as suite]
             [clojure.test :refer :all]
             [atomdb.store :as store]
             [atomdb.store.memory :refer [->MemoryChunkStore]]))
