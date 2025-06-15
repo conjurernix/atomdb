@@ -3,10 +3,13 @@
          org.clojure/tools.namespace {:mvn/version "1.5.0"}
          tick/tick                   {:mvn/version "1.0"}}
  :aliases
- {:dev    {:extra-deps {hashp/hashp {:mvn/version "0.2.2"}
-                        }}
-  :test   {:extra-paths ["test"]
-           :extra-deps  {lambdaisland/kaocha {:mvn/version "1.87.1366"}}
-           :main-opts   ["-m" "kaocha.runner"]}
-  :kaocha {:main-opts ["-m" "kaocha.runner"]}
-  :kaocha-watch {:main-opts ["-m" "kaocha.runner" "--watch"]}}}
+ {:dev          {:extra-deps {hashp/hashp {:mvn/version "0.2.2"}
+                              }}
+  :test         {:extra-paths ["test"]
+                 :extra-deps  {lambdaisland/kaocha {:mvn/version "1.87.1366"}}
+                 :main-opts   ["-m" "kaocha.runner"]}
+  :kaocha       {:main-opts ["-m" "kaocha.runner"]}
+  :kaocha-watch {:main-opts ["-m" "kaocha.runner" "--watch"]}
+  :build        {:deps       {io.github.clojure/tools.build {:git/tag "v0.9.6" :git/sha "8e78bcc"}
+                              slipset/deps-deploy           {:mvn/version "0.2.1"}}
+                 :ns-default build}}}

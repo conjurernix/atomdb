@@ -184,9 +184,54 @@ When creating a database with `atom/db`, you can provide the following options:
 - For large databases, consider using the file store with an LRU cache
 - Batch related operations in a single `swap!` call when possible
 
-## Testing
+## Building and Testing
 
-AtomDB uses [Kaocha](https://github.com/lambdaisland/kaocha) for testing. Kaocha is a comprehensive test runner for Clojure that provides a rich set of features.
+AtomDB uses [tools.build](https://github.com/clojure/tools.build) for building and deploying, and [Kaocha](https://github.com/lambdaisland/kaocha) for testing.
+
+### Building
+
+To build a JAR file:
+
+```bash
+clojure -T:build jar
+```
+
+To install the JAR to your local Maven repository:
+
+```bash
+clojure -T:build install
+```
+
+To deploy the JAR to Clojars:
+
+```bash
+clojure -T:build deploy
+```
+
+This uses [deps-deploy](https://github.com/slipset/deps-deploy) for deployment. Authentication is handled via:
+- `CLOJARS_USERNAME` and `CLOJARS_PASSWORD` environment variables, or
+- Credentials in `~/.clojure/deps.edn` or `~/.m2/settings.xml`
+
+See the [deps-deploy documentation](https://github.com/slipset/deps-deploy) for more details on authentication options.
+
+### Version Management
+
+AtomDB uses git tags for version management. The version number is automatically retrieved from the latest git tag when building the JAR.
+
+To bump the version number, use one of the following commands:
+
+```bash
+# Increment major version (x.0.0)
+clojure -T:build bump-major
+
+# Increment minor version (x.y.0)
+clojure -T:build bump-minor
+
+# Increment patch version (x.y.z)
+clojure -T:build bump-patch
+```
+
+These commands will create a new git tag with the incremented version number. The next time you build the JAR, it will use the new version.
 
 ### Running Tests
 
@@ -196,12 +241,26 @@ To run all tests:
 clojure -M:dev:test:kaocha
 ```
 
+Or using the build tool:
+
+```bash
+clojure -T:build test
+```
+
 ### Watch Mode
 
 To run tests in watch mode (automatically re-run tests when files change):
 
 ```bash
 clojure -M:dev:test:kaocha-watch
+```
+
+### Continuous Integration
+
+To run tests and build a JAR (useful for CI environments):
+
+```bash
+clojure -T:build ci
 ```
 
 ### Kaocha Configuration
