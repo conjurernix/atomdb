@@ -35,7 +35,7 @@
   [version]
   (format "target/%s-%s.jar" (name lib) version))
 
-(defn clean [_]
+(defn clean [_opts]
   (b/delete {:path "target"}))
 
 (defn jar [opts]
@@ -64,8 +64,7 @@
                 :jar-file jar-file
                 :class-dir class-dir})))
 
-(defn deploy [opts]
-  (jar opts)
+(defn deploy [_opts]
   (let [version (get-version)
         jar-file (get-jar-file version)]
     (println "Deploying jar to Clojars using deps-deploy")
@@ -73,7 +72,7 @@
                 :artifact jar-file
                 :pom-file (str class-dir "/META-INF/maven/" (namespace lib) "/" (name lib) "/pom.xml")})))
 
-(defn run-test [opts]
+(defn run-test [_opts]
   (println "Running tests")
   (let [result (sh "clojure" "-M:dev:test:kaocha")]
     (println (:out result))
@@ -83,7 +82,8 @@
 
 (defn ci [opts]
   (run-test opts)
-  (jar opts))
+  (jar opts)
+  (deploy opts))
 
 ;; Version bumping functions
 

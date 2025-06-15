@@ -263,6 +263,22 @@ To run tests and build a JAR (useful for CI environments):
 clojure -T:build ci
 ```
 
+AtomDB uses GitHub Actions for continuous integration. When a new tag is pushed to the repository, a GitHub Actions workflow automatically runs the `ci` task, which:
+
+1. Runs all tests
+2. Builds a JAR file
+3. Deploys the JAR to Clojars
+
+This ensures that every tagged release is automatically tested and published. To trigger this process, simply push a new tag:
+
+```bash
+# First, bump the version (creates a new tag)
+clojure -T:build bump-patch
+
+# Then, push the tag to GitHub
+git push --tags
+```
+
 ### Kaocha Configuration
 
 The Kaocha configuration is defined in `tests.edn`. You can modify this file to customize how tests are run, including:
