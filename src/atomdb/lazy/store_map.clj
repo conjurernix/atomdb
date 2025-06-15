@@ -1,7 +1,7 @@
 (ns atomdb.lazy.store-map
   (:require [atomdb.store :as store]
             [atomdb.utils :as u])
-  (:import (clojure.lang Associative Counted IFn ILookup IMeta IObj IPersistentMap MapEntry Seqable)
+  (:import (clojure.lang Associative Counted IFn ILookup IMeta IObj IPersistentCollection IPersistentMap MapEntry Seqable)
            (java.util Map Map$Entry)))
 
 ;; Forward declarations
@@ -10,16 +10,32 @@
 (deftype StoreMap [store node ^:volatile-mutable loaded-keys]
   IPersistentMap
   (assoc [this k v]
-    (throw (UnsupportedOperationException. "LazyMap is read-only")))
+    (let [new-children (assoc (:children node) k (store/persist store v))
+          new-node {:type :map :children new-children}]
+      (store-map store new-node)))
 
   (without [this k]
-    (throw (UnsupportedOperationException. "LazyMap is read-only")))
+    (let [new-children (dissoc (:children node) k)
+          new-node {:type :map :children new-children}]
+      (store-map store new-node)))
 
   (iterator [this]
     (.iterator ^Iterable (seq this)))
 
+  IPersistentCollection
+  (cons [this o]
+    (cons o (seq this)))
+
+  (empty [_]
+    {})
+
+  (equiv [this o]
+    (and (instance? Map o)
+         (= (count this) (count o))
+         (every? (fn [[k v]] (= v (get o k))) (seq this))))
+
   Associative
-  (containsKey [this k]
+  (containsKey [_this k]
     (contains? (:children node) k))
 
   (entryAt [this k]
@@ -63,11 +79,12 @@
 
   IObj
   (withMeta [this meta]
-    (throw (UnsupportedOperationException. "LazyMap is read-only")))
+    (let [new-node (assoc node :meta meta)]
+      (store-map store new-node)))
 
   IMeta
   (meta [this]
-    nil)
+    (:meta node))
 
   Object
   (toString [this]
@@ -96,16 +113,16 @@
     (get this k nil))
 
   (put [this k v]
-    (throw (UnsupportedOperationException. "LazyMap is read-only")))
+    (throw (UnsupportedOperationException. "Use assoc instead of put for immutable maps")))
 
   (remove [this k]
-    (throw (UnsupportedOperationException. "LazyMap is read-only")))
+    (throw (UnsupportedOperationException. "Use dissoc instead of remove for immutable maps")))
 
   (putAll [this m]
-    (throw (UnsupportedOperationException. "LazyMap is read-only")))
+    (throw (UnsupportedOperationException. "Use merge or into instead of putAll for immutable maps")))
 
   (clear [this]
-    (throw (UnsupportedOperationException. "LazyMap is read-only")))
+    (throw (UnsupportedOperationException. "Use empty map {} instead of clear for immutable maps")))
 
   (keySet [this]
     (set (lazy-keys this)))
@@ -117,7 +134,7 @@
     (set (map (fn [[k v]] (proxy [Map$Entry] []
                             (getKey [] k)
                             (getValue [] v)
-                            (setValue [v] (throw (UnsupportedOperationException.)))))
+                            (setValue [v] (throw (UnsupportedOperationException. "Use assoc instead of setValue for immutable maps")))))
               (seq this))))
   u/StoreDataStructure
   (to-clj [this]

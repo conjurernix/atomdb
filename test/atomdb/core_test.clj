@@ -34,19 +34,19 @@
     (let [db (db {:init {:counter 0}})]
       (is (= {:counter 0} (u/->clj @db))))))
 
-#_(deftest db-swap-test
+(deftest db-swap-test
   (testing "Swapping a database updates its state"
     (let [db (db {:init {:counter 0}})]
       (swap! db update :counter inc)
-      (is (= {:counter 1} @db))
+      (is (= {:counter 1} (u/->clj @db)))
 
       (swap! db assoc :new-key "value")
-      (is (= {:counter 1 :new-key "value"} @db))
+      (is (= {:counter 1 :new-key "value"} (u/->clj @db)))
 
       (swap! db update-in [:counter] + 10)
-      (is (= {:counter 11 :new-key "value"} @db)))))
+      (is (= {:counter 11 :new-key "value"} (u/->clj @db))))))
 
-#_(deftest db-reset-test
+(deftest db-reset-test
   (testing "Resetting a database replaces its state"
     (let [db (db {:init {:counter 0}})]
       (reset! db {:new-state true})
@@ -70,20 +70,20 @@
              (get-in @db [:users 1 :name])))
 
       ;; swap! with assoc-in
-      #_(swap! db assoc-in [:users 4] {:id 4 :name "Diana" :email "diana@example.com" :age 33})
-      #_(is (= 4 (count (:users @db))))
-      #_(is (= "Diana" (get-in @db [:users 4 :name])))
+      (swap! db assoc-in [:users 4] {:id 4 :name "Diana" :email "diana@example.com" :age 33})
+      (is (= 4 (count (:users @db))))
+      (is (= "Diana" (get-in @db [:users 4 :name])))
 
       ;; swap! with update-in
-      #_(swap! db update-in [:users 1 :age] inc)
-      #_(is (= 29 (get-in @db [:users 1 :age])))
+      (swap! db update-in [:users 1 :age] inc)
+      (is (= 29 (get-in @db [:users 1 :age])))
 
       ;; swap! with update-in and dissoc
-      #_(swap! db update-in [:users] dissoc 3)
-      #_(is (= 3 (count (:users @db))))
-      #_(is (nil? (get-in @db [:users 3]))))))
+      (swap! db update-in [:users] dissoc 3)
+      (is (= 3 (count (:users @db))))
+      (is (nil? (get-in @db [:users 3]))))))
 
-#_(deftest db-persistence-test
+(deftest db-persistence-test
   (testing "Database persists data correctly"
     (let [db (db {:init {:users test-users}})
           store (get-store db)
@@ -131,7 +131,7 @@
                   :init {:test true}})]
       (is (= {:test true} (u/->clj @db))))))
 
-#_(deftest db-complex-operations-test
+(deftest db-complex-operations-test
   (testing "Complex operations on nested data structures"
     (let [db (db {:init {:users test-users
                          :counters {:visits 0 :updates 0}
