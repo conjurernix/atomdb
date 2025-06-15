@@ -12,11 +12,10 @@
     (let [s (serde/serialize serde data)
           h (u/sha256 s)
           path (io/file dir (subs h 0 2) (subs h 2))]
-      (when-not (.exists path)
-        (.mkdirs (.getParentFile path))
-        (with-open [out (io/output-stream path)]
-          (.write ^OutputStream out ^bytes s))
-        h)))
+      (.mkdirs (.getParentFile path))
+      (with-open [out (io/output-stream path)]
+        (.write ^OutputStream out ^bytes s))
+      h))
   (get-chunk [_ hash]
     (let [path (io/file dir (subs hash 0 2) (subs hash 2))]
       (when (.exists path)
