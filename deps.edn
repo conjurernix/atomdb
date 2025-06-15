@@ -1,7 +1,12 @@
 {:paths ["src"]
  :deps  {org.clojure/data.fressian   {:mvn/version "1.1.0"}
-         org.clojure/tools.namespace {:mvn/version "1.5.0"}}
+         org.clojure/tools.namespace {:mvn/version "1.5.0"}
+         tick/tick                   {:mvn/version "1.0"}}
  :aliases
- {:dev  {:extra-deps {hashp/hashp {:mvn/version "0.2.2"}
-                      tick/tick   {:mvn/version "1.0"}}}
-  :test {:extra-paths ["test"]}}}
+ {:dev    {:extra-deps {hashp/hashp {:mvn/version "0.2.2"}
+                        }}
+  :test   {:extra-paths ["test"]
+           :extra-deps  {lambdaisland/kaocha {:mvn/version "1.87.1366"}}
+           :main-opts   ["-m" "kaocha.runner"]}
+  :kaocha {:main-opts ["-m" "kaocha.runner"]}
+  :kaocha-watch {:main-opts ["-m" "kaocha.runner" "--watch"]}}}

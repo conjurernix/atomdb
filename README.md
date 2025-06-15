@@ -184,6 +184,38 @@ When creating a database with `atom/db`, you can provide the following options:
 - For large databases, consider using the file store with an LRU cache
 - Batch related operations in a single `swap!` call when possible
 
+## Testing
+
+AtomDB uses [Kaocha](https://github.com/lambdaisland/kaocha) for testing. Kaocha is a comprehensive test runner for Clojure that provides a rich set of features.
+
+### Running Tests
+
+To run all tests:
+
+```bash
+clojure -M:dev:test:kaocha
+```
+
+### Watch Mode
+
+To run tests in watch mode (automatically re-run tests when files change):
+
+```bash
+clojure -M:dev:test:kaocha-watch
+```
+
+### Kaocha Configuration
+
+The Kaocha configuration is defined in `tests.edn`. You can modify this file to customize how tests are run, including:
+
+- Test selectors
+- Reporters
+- Plugins
+- Randomization
+- Profiling
+
+For more information about Kaocha configuration options, see the [Kaocha documentation](https://cljdoc.org/d/lambdaisland/kaocha/CURRENT).
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
