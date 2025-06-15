@@ -1,6 +1,6 @@
 # AtomDB
 
-**AtomDB** is a content-addressable, immutable, pluggable database designed with Clojure’s functional data principles in mind.
+**AtomDB** is an in-process, content-addressable, immutable, pluggable database designed with Clojure’s functional data principles in mind.
 
 ## Features
 
@@ -18,35 +18,55 @@
 - Booleans, numbers, ratios, bigdecimals
 - UUIDs, Instants, nil, and empty collections
 
-## Getting Started
+## Using
 
-1. Create a store (memory or file-based)
-2. Optionally wrap it with a cache
-3. Use `persist` to store values and get a content hash
-4. Use `get-chunk` and `load` to restore the value
+### Retrieving Data
 
-## Testing
+Let's assume the following initialization of the `db`
+```clojure
+  
+(def mock-users
+  {1 {:id 1 :name "Alice" :email "alice@example.com" :age 28}
+   2 {:id 2 :name "Bob" :email "bob@example.com" :age 30}
+   3 {:id 3 :name "Charlie" :email "charlie@example.com" :age 44}})
 
-Run tests with:
-
+(def db (atom/db {:init {:users mock-users}}))
 ```
-(clojure.test/run-tests 'atom-db.core)
+
+We can now read get the map of users like so
+```clojure
+(get @db :users) 
+```
+Keep in mind, dereferencing `db` will not load the whole database from disk. In fact this will return a lazy map where no values are realized until they are requested, which will be subsequently be loaded from disk and _potentially_ cached.
+
+Similarly, we can access a specific user like so:
+```clojure
+(def user-id 1)
+(get-in @db [:users user-id])
+```
+or using any other clojure core function that works on clojure core datastructures!
+
+If cached, re-retrieving the same `user-id` will not have to do disk IO.
+
+### Storing Data
+Since `db` behaves like an `atom`, we can store data by using the familiar `atom` functions 
+```clojure
+(def new-user {:id 4 :name "Diana" :email "diana@example.com" :age 33})
+
+(swap! db assoc-in [:users (:id new-user)] new-user)
 ```
 
-Covers roundtrip serialization, edge cases, store correctness, and cache behaviors.
+In the above example, the new user will be stored efficiently. 
+NOTE: this does not rewrite the whole db to disk.
 
-## Roadmap
-
-- Structural diff and merge
-- Version tracking (root log)
-- Sync and CRDT support
-- Reactive API wrapper
-- Streaming/transducer interfaces
-
-## License
-
-MIT
-
-## Author
-
-Built by [Your Name]. Contributions welcome!
+We can update an existing user in the same manner
+```clojure
+(swap! db update-in [:users 1 :age] inc)
+```
+Again, here only the necessary data is loaded from disk, and the diff is stored efficiently.
+In fact, we could write this as follows without any IO impact:
+```clojure
+(swap! db
+       (fn [{:keys [users] :as db}]
+         (assoc db :users (update-in users [1 :age] inc)))
+```
