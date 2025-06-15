@@ -1,7 +1,7 @@
 (ns atomdb.lazy.store-map
   (:require [atomdb.store :as store]
             [atomdb.utils :as u])
-  (:import (clojure.lang Associative Counted IFn ILookup IMeta IObj IPersistentCollection IPersistentMap MapEntry Seqable)
+  (:import (clojure.lang Associative Counted IFn ILookup IMeta IObj IPersistentMap MapEntry Seqable)
            (java.util Map Map$Entry)))
 
 ;; Forward declarations
@@ -17,18 +17,6 @@
 
   (iterator [this]
     (.iterator ^Iterable (seq this)))
-
-  IPersistentCollection
-  (cons [this o]
-    (throw (UnsupportedOperationException. "LazyMap is read-only")))
-
-  (empty [this]
-    (throw (UnsupportedOperationException. "LazyMap is read-only")))
-
-  (equiv [this o]
-    (and (instance? Map o)
-         (= (count this) (count o))
-         (every? (fn [[k v]] (= v (get o k))) (seq this))))
 
   Associative
   (containsKey [this k]
