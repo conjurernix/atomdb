@@ -99,7 +99,7 @@ Add the following dependency to your project.clj or deps.edn:
 ### Retrieving Data
 
 ```clojure
-;; Get the entire database (lazy-loaded)
+;; Get the entire database
 @db
 
 ;; Get a specific value
@@ -110,8 +110,7 @@ Add the following dependency to your project.clj or deps.edn:
 
 ```
 
-Keep in mind, dereferencing `db` will not load the whole database from disk. It returns a lazy map where values are
-loaded from disk only when requested and potentially cached based on your cache configuration.
+Currently, dereferencing `db` loads the entire database into memory. However, AtomDB includes lazy data structures (see the "Lazy Data Structures" section below) that can be used to load data from storage only when needed. These lazy data structures are not yet integrated into the core AtomDB implementation, but can be used separately.
 
 ### Storing Data
 
@@ -177,6 +176,38 @@ When creating a database with `atom/db`, you can provide the following options:
 
 - `serde.edn/edn-serde []` - EDN serialization implementation
 - `serde.fressian/fressian-serde []` - Fressian serialization implementation
+
+### Lazy Data Structures
+
+AtomDB includes implementations of lazy data structures that load data from storage only when needed:
+
+- `lazy-map/create-lazy-map [store node]` - Creates a lazy map that loads values from the store when accessed
+- `lazy-map/lazy-load-node [store node]` - Similar to `store/load-node` but returns a LazyMap for maps
+
+These lazy data structures implement the same interfaces as their Clojure core counterparts, but load data from storage on demand instead of keeping everything in memory. This can be useful for working with large datasets where you only need to access a small portion of the data at a time.
+
+Example usage:
+
+```clojure
+(require '[atomdb.store :as store]
+         '[atomdb.lazy.store-map :as lazy-map]
+         '[atomdb.store.memory :as memory])
+
+;; Create a store and persist some data
+(def store (memory/->MemoryChunkStore (atom {})))
+(def data {:users {1 {:name "Alice" :email "alice@example.com"}
+                   2 {:name "Bob" :email "bob@example.com"}}})
+(def hash (store/persist store data))
+
+;; Get the node from the store
+(def node (store/get-chunk store hash))
+
+;; Create a lazy map
+(def lazy-data (lazy-map/create-lazy-map store node))
+
+;; Access data - only loads what you need
+(get-in lazy-data [:users 1 :name]) ;; => "Alice"
+```
 
 ## Performance Considerations
 

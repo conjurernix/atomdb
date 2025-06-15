@@ -5,6 +5,7 @@
    persisting and loading different types of Clojure data structures.
    The implementation uses a content-addressable approach where data is
    identified by its SHA-256 hash."
+  (:require [clojure.walk :as walk])
   (:import (clojure.lang IPersistentList IPersistentMap IPersistentSet IPersistentVector Keyword Ratio Symbol)
            (java.time ZonedDateTime)
            (java.time.format DateTimeFormatter)
@@ -96,12 +97,6 @@
 
 (defmethod persist :default [store v]
   (put-chunk! store {:type :leaf :value v}))
-
-(defmethod load-node :map [store {:keys [children]}]
-  (into {}
-        (map (fn [[k h]]
-               [k (load-node store (get-chunk store h))])
-             children)))
 
 (defmethod load-node :vector [store {:keys [children]}]
   (mapv #(load-node store (get-chunk store %)) children))

@@ -1,5 +1,6 @@
 (ns atomdb.store.test-suite
   (:require [atomdb.store :as store]
+            [atomdb.utils :as u]
             [clojure.test :refer :all])
   (:import (java.util Date UUID)))
 
@@ -27,7 +28,7 @@
         (let [h (store/persist store v)
               node (store/get-chunk store h)
               result (store/load-node store node)]
-          (is (= v result)))))))
+          (is (= v (u/->clj result))))))))
 
 (defn store-edge-case-behavior [store]
   (testing "handles missing hash safely"
@@ -39,4 +40,4 @@
                :d {:inner (bigdec "99.99")}}
           h (store/persist store val)
           result (store/load-node store (store/get-chunk store h))]
-      (is (= val result)))))
+      (is (= val (u/->clj result))))))

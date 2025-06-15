@@ -23,3 +23,12 @@
     (->> (.digest digest (.getBytes (pr-str s) "UTF-8"))
          (map #(format "%02x" %))
          (apply str))))
+
+(defprotocol StoreDataStructure
+  (to-clj [this] "Converts the AtomDB StoreDataStructure into its Clojure core data structure equivalent"))
+
+(defn ->clj [x]
+  (when (some? x)
+    (if (satisfies? StoreDataStructure x)
+      (to-clj x)
+      x)))

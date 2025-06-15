@@ -31,8 +31,9 @@
   (deref [this]
     (let [root-hash @root-hash-atom]
       (when root-hash
-        (let [root-node (store/get-chunk store root-hash)]
-          (store/load-node store root-node)))))
+        (let [root-node (store/get-chunk store root-hash)
+              data (store/load-node store root-node)]
+          data))))
 
   IAtom
   (swap [this f]
