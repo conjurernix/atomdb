@@ -1,16 +1,52 @@
 (ns atomdb.store
+  "Core functionality for AtomDB's content-addressable storage system.
+
+   This namespace defines the ChunkStore protocol and multimethods for
+   persisting and loading different types of Clojure data structures.
+   The implementation uses a content-addressable approach where data is
+   identified by its SHA-256 hash."
   (:import (clojure.lang IPersistentList IPersistentMap IPersistentSet IPersistentVector Keyword Ratio Symbol)
            (java.time ZonedDateTime)
            (java.time.format DateTimeFormatter)
            (java.util Date UUID)))
 
 (defprotocol ChunkStore
-  (put-chunk! [store data])
-  (get-chunk [store hash]))
+  "Protocol for storing and retrieving chunks of data.
 
-(defmulti persist (fn [_store v] (type v)))
+   Implementations of this protocol provide the storage backend for AtomDB.
+   Chunks are stored and retrieved by their content hash, making the storage
+   content-addressable."
+  (put-chunk! 
+    [store data]
+    "Stores a chunk of data and returns its hash.
 
-(defmulti load-node (fn [_store node] (:type node)))
+     The hash is computed based on the content of the data, making it
+     content-addressable. If the chunk already exists (same hash), the
+     implementation may choose to not store it again.")
+  (get-chunk 
+    [store hash]
+    "Retrieves a chunk of data by its hash.
+
+     Returns the chunk if found, or nil if not found."))
+
+(defmulti persist 
+  "Persists a Clojure value to the store and returns its hash.
+
+   This multimethod handles different Clojure data types by breaking them
+   down into chunks and storing them in the provided store. It returns
+   the hash of the root chunk, which can be used to retrieve the value later.
+
+   Dispatches on the type of the value being persisted."
+  (fn [_store v] (type v)))
+
+(defmulti load-node 
+  "Loads a node from the store and reconstructs its value.
+
+   This multimethod handles different node types by loading their children
+   recursively and reconstructing the original Clojure value.
+
+   Dispatches on the :type of the node."
+  (fn [_store node] (:type node)))
 
 (defmethod persist IPersistentMap [store m]
   (let [children (into {} (map (fn [[k v]] [k (persist store v)]) m))

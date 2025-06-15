@@ -1,6 +1,8 @@
 # AtomDB
 
-**AtomDB** is an in-process, content-addressable, immutable, pluggable database designed with Clojure’s functional data principles in mind.
+**AtomDB** is an in-process, content-addressable, immutable, pluggable database designed with Clojure's functional data
+principles in mind. It provides a familiar Clojure atom-like interface while offering persistent storage, efficient
+structural sharing, and flexible caching options.
 
 ## Features
 
@@ -11,6 +13,18 @@
 - Flexible cache options (LRU, TTL, no-op)
 - Supports core Clojure data types, plus UUID, Instant, BigDecimal, etc.
 
+## Installation
+
+Add the following dependency to your project.clj or deps.edn:
+
+```clojure
+;; deps.edn
+{:deps {atomdb/atomdb {:mvn/version "0.1.0"}}}
+
+;; project.clj
+[atomdb/atomdb "0.1.0"]
+```
+
 ## Supported Data Types
 
 - Maps, vectors, sets, lists
@@ -18,55 +32,164 @@
 - Booleans, numbers, ratios, bigdecimals
 - UUIDs, Instants, nil, and empty collections
 
-## Using
+## Quick Start
 
-### Retrieving Data
-
-Let's assume the following initialization of the `db`
 ```clojure
-  
+(require '[atomdb.core :as atom]
+         '[atomdb.store.memory :as memory]
+         '[atomdb.store.file :as file]
+         '[atomdb.cache.lru :as lru]
+         '[atomdb.serde.edn :as serde.edn])
+
+;; Create an in-memory database
+(def db (atom/db))
+
+;; Initialize with data
+(reset! db {:users {1 {:name "Alice" :email "alice@example.com"}}})
+
+;; Add more data
+(swap! db assoc-in [:users 2] {:name "Bob" :email "bob@example.com"})
+
+;; Read data
+(get-in @db [:users 1 :name]) ;; => "Alice"
+
+;; Create a file-backed database
+(def persistent-db (atom/db {:store (file/file-store "/path/to/data" (serde.edn/edn-serde))
+                             :cache (lru/lru-cache 1000)}))
+```
+
+## Usage Guide
+
+### Creating a Database
+
+```clojure
+(require '[atomdb.core :as atom]
+         '[atomdb.store.memory :as memory]
+         '[atomdb.store.file :as file]
+         '[atomdb.cache.lru :as lru]
+         '[atomdb.cache.ttl :as ttl]
+         '[atomdb.cache.noop :as noop]
+         '[atomdb.serde.edn :as serde.edn])
+
+;; Create with default options (in-memory store, LRU cache)
+(def db (atom/db))
+
+;; Create with initial data
 (def mock-users
   {1 {:id 1 :name "Alice" :email "alice@example.com" :age 28}
    2 {:id 2 :name "Bob" :email "bob@example.com" :age 30}
    3 {:id 3 :name "Charlie" :email "charlie@example.com" :age 44}})
 
 (def db (atom/db {:init {:users mock-users}}))
+
+;; Create with file store
+(def db (atom/db {:store (file/file-store "data/mydb" (serde.edn/edn-serde))
+                  :init  {:users mock-users}}))
+
+;; Create with TTL cache
+(def db (atom/db {:cache (ttl/ttl-cache 60000)  ;; 1 minute
+                  :init  {:users mock-users}}))
+
+;; Create with custom store and cache
+(def db (atom/db {:store (file/file-store "data/mydb" (serde.edn/edn-serde))
+                  :cache (lru/lru-cache 10000)
+                  :init  {:users mock-users}}))
 ```
 
-We can now read get the map of users like so
+### Retrieving Data
+
 ```clojure
-(get @db :users) 
-```
-Keep in mind, dereferencing `db` will not load the whole database from disk. In fact this will return a lazy map where no values are realized until they are requested, which will be subsequently be loaded from disk and _potentially_ cached.
+;; Get the entire database (lazy-loaded)
+@db
 
-Similarly, we can access a specific user like so:
-```clojure
-(def user-id 1)
-(get-in @db [:users user-id])
-```
-or using any other clojure core function that works on clojure core datastructures!
+;; Get a specific value
+(get @db :users)
 
-If cached, re-retrieving the same `user-id` will not have to do disk IO.
+;; Get a nested value
+(get-in @db [:users 1 :name])
+
+```
+
+Keep in mind, dereferencing `db` will not load the whole database from disk. It returns a lazy map where values are
+loaded from disk only when requested and potentially cached based on your cache configuration.
 
 ### Storing Data
-Since `db` behaves like an `atom`, we can store data by using the familiar `atom` functions 
+
+Since `db` behaves like a Clojure `atom`, you can use familiar atom functions:
+
 ```clojure
+;; Add a new user
 (def new-user {:id 4 :name "Diana" :email "diana@example.com" :age 33})
-
 (swap! db assoc-in [:users (:id new-user)] new-user)
-```
 
-In the above example, the new user will be stored efficiently. 
-NOTE: this does not rewrite the whole db to disk.
-
-We can update an existing user in the same manner
-```clojure
+;; Update an existing user
 (swap! db update-in [:users 1 :age] inc)
+
 ```
-Again, here only the necessary data is loaded from disk, and the diff is stored efficiently.
-In fact, we could write this as follows without any IO impact:
+
+AtomDB stores data efficiently:
+
+- Only changed parts of the data structure are persisted
+- Structural sharing is used to minimize storage requirements
+- Content-addressing ensures data integrity
+
+### Complex Operations
+
+You can perform complex operations in a single transaction:
+
 ```clojure
 (swap! db
-       (fn [{:keys [users] :as db}]
-         (assoc db :users (update-in users [1 :age] inc)))
+       (fn [{:keys [users counters] :as data}]
+         (-> data
+             (assoc-in [:users 4] new-user)
+             (update-in [:counters :total-users] inc)
+             (update-in [:counters :last-updated] (constantly (java.util.Date.))))))
 ```
+
+## Configuration Options
+
+When creating a database with `atom/db`, you can provide the following options:
+
+| Option   | Description                                               | Default                        |
+|----------|-----------------------------------------------------------|--------------------------------|
+| `:store` | Store implementation (must implement ChunkStore protocol) | `memory/->MemoryChunkStore`    |
+| `:cache` | Cache implementation (must implement Cache protocol)      | `lru/lru-cache` with size 1000 |
+| `:init`  | Initial data to populate the database                     | `nil`                          |
+
+## API Reference
+
+### Core Functions
+
+- `atom/db [options]` - Creates a new AtomDB instance with the given options
+
+### Store Implementations
+
+- `memory/->MemoryChunkStore [store-atom]` - In-memory store implementation
+- `file/file-store [dir serde]` - File-based store implementation
+
+### Cache Implementations
+
+- `lru/lru-cache [capacity]` - Least Recently Used cache implementation
+- `ttl/ttl-cache [ttl-ms]` - Time-To-Live cache implementation
+- `noop/no-op-cache []` - No-operation cache implementation
+
+### Serialization Implementations
+
+- `serde.edn/edn-serde []` - EDN serialization implementation
+- `serde.fressian/fressian-serde []` - Fressian serialization implementation
+
+## Performance Considerations
+
+- Use appropriate cache settings for your workload
+- For large databases, consider using the file store with an LRU cache
+- Batch related operations in a single `swap!` call when possible
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+Copyright © 2023
+
+Distributed under the Eclipse Public License, the same as Clojure.

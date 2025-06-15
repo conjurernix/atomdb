@@ -21,5 +21,23 @@
                    (subvec updated 1))
                  updated))))))
 
-(defn lru-cache [capacity]
+(defn lru-cache
+  "Creates a new Least Recently Used (LRU) cache for AtomDB.
+
+   Arguments:
+   - capacity: Maximum number of items the cache can hold
+
+   The LRU cache keeps track of the order in which items are accessed
+   and evicts the least recently used items when the capacity is reached.
+   This provides a good balance between memory usage and performance for
+   most use cases.
+
+   Example:
+   ```
+   (require '[atomdb.cache.lru :as lru]
+            '[atomdb.core :as atomdb])
+
+   (def db (atomdb/db {:cache (lru/lru-cache 10000)}))
+   ```"
+  [capacity]
   (->LRUCache capacity (atom {}) (atom [])))
