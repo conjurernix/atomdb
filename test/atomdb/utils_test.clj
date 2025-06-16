@@ -1,5 +1,5 @@
 (ns atomdb.utils-test
-  (:require [atomdb.lazy.store-map :as lazy-map]
+  (:require [atomdb.data.store-map :as lazy-map]
             [atomdb.store :as store]
             [atomdb.store.memory :as memory]
             [atomdb.utils :as utils]

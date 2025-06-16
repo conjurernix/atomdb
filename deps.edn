@@ -6,8 +6,8 @@
  {:dev          {:extra-deps {hashp/hashp {:mvn/version "0.2.2"}}}
   :test         {:extra-paths ["test"]
                  :extra-deps  {lambdaisland/kaocha {:mvn/version "1.87.1366"}}}
-  :kaocha       {:main-opts ["-m" "kaocha.runner"]}
-  :kaocha-watch {:main-opts ["-m" "kaocha.runner" "--watch"]}
+  :kaocha       {:main-opts ["-e" "(require,'hashp.core)"
+                             "-m" "kaocha.runner"]}
   :build        {:deps       {io.github.clojure/tools.build {:git/tag "v0.9.6" :git/sha "8e78bcc"}
                               slipset/deps-deploy           {:mvn/version "0.2.1"}}
                  :ns-default build}}}

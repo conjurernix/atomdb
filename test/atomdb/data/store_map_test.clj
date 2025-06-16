@@ -1,5 +1,5 @@
-(ns atomdb.lazy.store-map-test
-  (:require [atomdb.lazy.store-map :as store-map]
+(ns atomdb.data.store-map-test
+  (:require [atomdb.data.store-map :as store-map]
             [atomdb.store :as store]
             [atomdb.store.memory :as memory]
             [clojure.test :refer :all]))

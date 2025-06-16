@@ -1,4 +1,4 @@
-(ns atomdb.lazy.store-map
+(ns atomdb.data.store-map
   (:require [atomdb.store :as store]
             [atomdb.utils :as u])
   (:import (clojure.lang Associative Counted IFn ILookup IMeta IObj IPersistentCollection IPersistentMap MapEntry Seqable)
