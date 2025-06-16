@@ -2,6 +2,10 @@
   (:require [atomdb.cache.lru :as lru]
             [atomdb.store :as store]
             [atomdb.store.memory :as memory]
+            [atomdb.data.store-map]
+            [atomdb.data.store-set]
+            [atomdb.data.store-list]
+            [atomdb.data.store-vector]
             [clojure.test :refer :all])
   (:import (clojure.lang IAtom IDeref)))
 

@@ -1,14 +1,32 @@
-
 (ns atomdb.data.store-vector
+  "Implementation of a persistent vector backed by a content-addressable store.
+
+   This namespace provides a lazy-loading vector implementation that stores
+   its elements in a content-addressable store. Elements are only loaded
+   when accessed, making it memory-efficient for large vectors.
+
+   The StoreVector type implements the standard Clojure vector interfaces
+   (IPersistentVector, Indexed, etc.) as well as the Java List interface,
+   allowing it to be used as a drop-in replacement for regular Clojure vectors."
   (:require [atomdb.store :as store]
             [atomdb.utils :as u])
   (:import (clojure.lang Counted IFn IMeta IObj IPersistentCollection IPersistentVector Indexed Seqable)
            (java.util List)))
 
 ;; Forward declarations
-(declare store-vector)
+(declare store-vector lazy-elements)
 
-(deftype StoreVector [store node ^:volatile-mutable loaded-values]
+; A persistent vector implementation backed by a content-addressable store.
+;
+; This type provides a lazy-loading vector where elements are only loaded
+; from the store when accessed. This makes it memory-efficient for large
+; vectors as only the accessed elements are kept in memory
+; Fields:
+; - store: The chunk store where vector elements are stored
+; - node: The node containing the vector structure with child references
+; - loaded-values: A cache of already loaded values to avoid repeated loading
+(deftype StoreVector
+  [store node ^:volatile-mutable loaded-values]
   IPersistentVector
   (assocN [_this i v]
     (let [new-children (assoc (:children node) i (store/persist store v))
@@ -16,13 +34,14 @@
       (store-vector store new-node)))
 
   (cons [this o]
-    (let [new-children (assoc (:children node) (count this) (store/persist store o))
+    ;; More efficient implementation that directly conjoins to the children vector
+    (let [new-children (conj (:children node) (store/persist store o))
           new-node {:type :vector :children new-children}]
       (store-vector store new-node)))
 
   (assoc [this i v]
     (.assocN this i v))
-  
+
   (rseq [this]
     (throw (UnsupportedOperationException. "Use reverse instead.")))
 
@@ -59,7 +78,7 @@
   Seqable
   (seq [this]
     (when (> (count this) 0)
-      (map #(nth this %) (range (count this)))))
+      (lazy-elements this)))
 
   Counted
   (count [this]
@@ -164,12 +183,33 @@
   (to-clj [this]
     (mapv u/->clj (seq this))))
 
+;; Helper functions
+(defn lazy-elements
+  "Returns a lazy sequence of all elements in the vector.
+
+   This function provides efficient lazy access to vector elements,
+   only loading them from the store when they are actually accessed.
+
+   Parameters:
+   - v: The StoreVector to get elements from
+
+   Returns:
+   - A lazy sequence of all elements in the vector"
+  [v]
+  (map #(nth v %) (range (count v))))
+
 (defn store-vector
   "Creates a new StoreVector instance.
 
+   This function creates a new StoreVector backed by the given store
+   and node. The vector elements are loaded lazily when accessed.
+
    Parameters:
    - store: The chunk store to load data from
-   - node: The node containing the vector data"
+   - node: The node containing the vector data
+
+   Returns:
+   - A new StoreVector instance"
   [store node]
   (->StoreVector store node {}))
 

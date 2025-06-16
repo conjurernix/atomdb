@@ -98,13 +98,6 @@
 (defmethod persist :default [store v]
   (put-chunk! store {:type :leaf :value v}))
 
-(defmethod load-node :set [store {:keys [children]}]
-  (into #{}
-        (map #(load-node store (get-chunk store %)) children)))
-
-(defmethod load-node :list [store {:keys [children]}]
-  (apply list (map #(load-node store (get-chunk store %)) children)))
-
 (defmethod load-node :keyword [_ {:keys [ns name]}]
   (if ns
     (keyword ns name)
