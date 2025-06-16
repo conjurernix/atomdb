@@ -160,13 +160,22 @@
     (apply list (take (- to-index from-index) (drop from-index (seq this)))))
 
   (iterator [this]
-    (.iterator ^Iterable (seq this)))
+    (let [s (seq this)]
+      (if s
+        (.iterator ^Iterable s)
+        (.iterator ^Iterable []))))
 
   (listIterator [this]
-    (.listIterator ^List (apply list (seq this))))
+    (let [s (seq this)]
+      (if s
+        (.listIterator ^List (apply list s))
+        (.listIterator ^List []))))
 
   (listIterator [this index]
-    (.listIterator ^List (apply list (seq this)) index))
+    (let [s (seq this)]
+      (if s
+        (.listIterator ^List (apply list s) index)
+        (.listIterator ^List [] index))))
 
   u/StoreDataStructure
   (to-clj [this]

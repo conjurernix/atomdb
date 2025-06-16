@@ -51,15 +51,14 @@
             ;; Return cached value if available
             (get loaded-values idx)
             ;; Otherwise load from store and cache
-            (if-let [hash (get-in node [:children idx])]
-              (let [value-node (store/get-chunk store hash)
-                    result (store/load-node store value-node)]
-                ;; Cache the result
-                (if loaded-values
-                  (set! loaded-values (assoc loaded-values idx result))
-                  (set! loaded-values {idx result}))
-                result)
-              o))))))
+            (let [hash (get-in node [:children idx])
+                  value-node (store/get-chunk store hash)
+                  result (store/load-node store value-node)]
+              ;; Cache the result
+              (if loaded-values
+                (set! loaded-values (assoc loaded-values idx result))
+                (set! loaded-values {idx result}))
+              result))))))
 
   IPersistentCollection
   (cons [this o]

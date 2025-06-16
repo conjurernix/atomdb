@@ -10,7 +10,7 @@
    allowing it to be used as a drop-in replacement for regular Clojure vectors."
   (:require [atomdb.store :as store]
             [atomdb.utils :as u])
-  (:import (clojure.lang Counted IFn IMeta IObj IPersistentCollection IPersistentVector Indexed Seqable)
+  (:import (clojure.lang Counted IFn ILookup IMeta IObj IPersistentCollection IPersistentVector Indexed Seqable)
            (java.util List)))
 
 ;; Forward declarations
@@ -83,6 +83,15 @@
   Counted
   (count [this]
     (count (:children node)))
+
+  ILookup
+  (valAt [this k]
+    (.valAt this k nil))
+
+  (valAt [this k not-found]
+    (if (integer? k)
+      (nth this k not-found)
+      not-found))
 
   IFn
   (invoke [this i]
@@ -171,13 +180,22 @@
     (vec (take (- to-index from-index) (drop from-index (seq this)))))
 
   (iterator [this]
-    (.iterator ^Iterable (seq this)))
+    (let [s (seq this)]
+      (if s
+        (.iterator ^Iterable s)
+        (.iterator ^Iterable []))))
 
   (listIterator [this]
-    (.listIterator ^List (vec (seq this))))
+    (let [s (seq this)]
+      (if s
+        (.listIterator ^List (vec s))
+        (.listIterator ^List []))))
 
   (listIterator [this index]
-    (.listIterator ^List (vec (seq this)) index))
+    (let [s (seq this)]
+      (if s
+        (.listIterator ^List (vec s) index)
+        (.listIterator ^List [] index))))
 
   u/StoreDataStructure
   (to-clj [this]
